@@ -49,7 +49,7 @@
             <div class="footer-content">Made with <i class="fas fa-heart"></i> and CSS magic</div>
         </footer>
     </div>
-    
+
     <script>
         // Simple interactions
         document.getElementById('box1').addEventListener('click', function() {
@@ -76,82 +76,188 @@
             const icon = this.querySelector('.icon');
             icon.style.animation = 'rocketBounce 1.2s infinite';
         });
-        
         document.getElementById('box3').addEventListener('mouseout', function() {
             const icon = this.querySelector('.icon');
             icon.style.animation = '';
         });
-        
-        // Add confetti effect when clicking Hello World
-        document.querySelector('.animated-title').addEventListener('click', function(e) {
-            // Create pop animation at click position
-            const popElement = document.createElement('div');
-            popElement.classList.add('pop-animation');
-            popElement.style.left = (e.clientX - 50) + 'px';
-            popElement.style.top = (e.clientY - 50) + 'px';
-            document.body.appendChild(popElement);
-            
-            // Remove the pop element after animation
-            setTimeout(() => {
-                popElement.remove();
-            }, 600);
-            
-            // Create confetti
-            createConfetti();
-            
-            // Update message
-            document.querySelector('.message').textContent = 'Confetti party! 🎊';
+
+        // ----------------------
+        // Confetti Physics Setup
+        // ----------------------
+        const confettiContainer = document.querySelector('.confetti-container');
+        const colors = ['#4285f4', '#34a853', '#fbbc05', '#db4437', '#0f9d58', '#ff6d00', '#ab47bc'];
+
+        const confettiPieces = [];
+        let rafId = null;
+
+        // Track upward scroll to push confetti up with the site
+        let lastScrollY = window.scrollY;
+        let scrollUpImpulse = 0;
+        window.addEventListener('scroll', () => {
+          const y = window.scrollY;
+          const deltaUp = lastScrollY - y; // positive when scrolling up
+          if (deltaUp > 0) {
+            scrollUpImpulse = Math.min(80, scrollUpImpulse + deltaUp);
+          }
+          lastScrollY = y;
         });
-        
-        // Function to create confetti
-        function createConfetti() {
-            const container = document.querySelector('.confetti-container');
-            container.innerHTML = ''; // Clear any existing confetti
-            
-            const colors = ['#4285f4', '#34a853', '#fbbc05', '#db4437', '#0f9d58'];
-            
-            // Create 100 confetti pieces
-            for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.classList.add('confetti');
-                
-                // Random properties
-                const size = Math.random() * 10 + 5;
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                const left = Math.random() * 100;
-                const delay = Math.random() * 2;
-                const duration = Math.random() * 2 + 2;
-                const rotationDirection = Math.random() > 0.5 ? 1 : -1;
-                
-                // Apply styles
-                confetti.style.width = `${size}px`;
-                confetti.style.height = `${size}px`;
-                confetti.style.backgroundColor = color;
-                confetti.style.left = `${left}%`;
-                confetti.style.animationDelay = `${delay}s`;
-                confetti.style.animationDuration = `${duration}s`;
-                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-                
-                // Apply random shapes
-                if (Math.random() > 0.6) {
-                    confetti.style.borderRadius = '50%'; // Circle
-                } else if (Math.random() > 0.5) {
-                    confetti.style.borderRadius = '0'; // Square
-                } else {
-                    confetti.style.width = `${size / 2}px`;
-                    confetti.style.height = `${size}px`;
-                    confetti.style.transform = `rotate(${45 + Math.random() * 45}deg)`;
-                }
-                
-                container.appendChild(confetti);
-                
-                // Remove confetti after animation completes
-                setTimeout(() => {
-                    confetti.remove();
-                }, (delay + duration) * 1000);
-            }
+
+        function currentFloorY(size = 0) {
+          return window.scrollY + window.innerHeight - size; // viewport bottom in page coords
         }
-        
+
+        function spawnConfettiBurst(originX, originY, count = 160) {
+          for (let i = 0; i < count; i++) {
+            const size = Math.random() * 10 + 5;
+            const piece = document.createElement('div');
+            piece.className = 'confetti';
+            piece.style.width = `${size}px`;
+            piece.style.height = `${size}px`;
+            piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() > 0.7 ? '50%' : '3px';
+
+            // Initial position (slight jitter around origin)
+            const startX = originX + (Math.random() - 0.5) * 60;
+            const startY = originY + (Math.random() - 0.5) * 20;
+
+            // Launch with wider spread and stronger upward energy
+            // Angle biased upwards (-90deg +/- 90deg)
+            const angle = (-Math.PI / 2) + (Math.random() - 0.5) * Math.PI; 
+            const speed = 5 + Math.random() * 9; // 5..14
+            const vx = Math.cos(angle) * speed;
+            const vy = Math.sin(angle) * speed; // negative is upward
+
+            confettiContainer.appendChild(piece);
+
+            confettiPieces.push({
+              el: piece,
+              x: startX,
+              y: startY,
+              vx,
+              vy,
+              size,
+              rot: Math.random() * 360,
+              vrot: (Math.random() - 0.5) * 14,
+              sw: Math.random() * 1000, // swirl seed
+              settled: false
+            });
+          }
+          startConfettiLoop();
+        }
+
+        function startConfettiLoop() {
+          if (rafId) return;
+          const gravity = 0.35;
+          const airDrag = 0.994;
+          const bounceDamp = 0.35;
+          const wallDamp = 0.28; // softer side-wall bounce
+          const wallMargin = 2;  // keep off the exact edge
+
+          function step() {
+            rafId = requestAnimationFrame(step);
+
+            // Viewport-aligned walls in page coordinates
+            const leftWall = window.scrollX + wallMargin;
+            const rightWall = window.scrollX + document.documentElement.clientWidth - wallMargin;
+
+            for (const p of confettiPieces) {
+              if (!p.settled) {
+                // Physics
+                p.vy += gravity;
+
+                // Gentle swirl drift for wider spread
+                p.vx += Math.sin((p.y + p.sw) * 0.06) * 0.05;
+
+                // Apply air drag
+                p.vx *= airDrag;
+                p.vy *= airDrag;
+
+                // Scroll-up impulse to make pieces go up with the site when user scrolls up
+                if (scrollUpImpulse > 0.1) {
+                  p.vy -= scrollUpImpulse * 0.02;
+                }
+
+                // Integrate
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rot += p.vrot;
+
+                // Side-wall collisions (soft bounce)
+                const rightLimit = rightWall - p.size;
+                if (p.x <= leftWall) {
+                  p.x = leftWall;
+                  p.vx = Math.abs(p.vx) * wallDamp;
+                } else if (p.x >= rightLimit) {
+                  p.x = rightLimit;
+                  p.vx = -Math.abs(p.vx) * wallDamp;
+                }
+
+                // Floor collision against current floor
+                const floorY = currentFloorY(p.size);
+                if (p.y >= floorY) {
+                  p.y = floorY;
+                  p.vy = -Math.abs(p.vy) * bounceDamp;
+                  p.vx *= 0.95;
+                  p.vrot *= 0.9;
+
+                  if (Math.abs(p.vy) < 0.6) {
+                    p.vy = 0;
+                    p.vx *= 0.9;
+                    p.vrot = 0;
+                    p.settled = true;
+                  }
+                }
+              } else {
+                // If floor moves down (scrolling), let it fall again
+                const newFloorY = currentFloorY(p.size);
+                if (p.y < newFloorY - 0.5) {
+                  p.settled = false;
+                }
+              }
+
+              // Render
+              p.el.style.left = `${p.x}px`;
+              p.el.style.top = `${p.y}px`;
+              p.el.style.transform = `rotate(${p.rot}deg)`;
+            }
+
+            // Decay the scroll impulse smoothly
+            scrollUpImpulse *= 0.9;
+
+            // Stop loop only when nothing remains
+            if (confettiPieces.length === 0) {
+              cancelAnimationFrame(rafId);
+              rafId = null;
+            }
+          }
+          rafId = requestAnimationFrame(step);
+        }
+
+        // Confetti pop ripple and burst from Hello World center
+        document.querySelector('.animated-title').addEventListener('click', function(e) {
+          const rect = this.getBoundingClientRect();
+          const originX = window.scrollX + rect.left + rect.width / 2;
+          const originY = window.scrollY + rect.top + rect.height / 2;
+
+          // Pop ripple at click location
+          const popElement = document.createElement('div');
+          popElement.classList.add('pop-animation');
+          popElement.style.left = (e.pageX - 50) + 'px';
+          popElement.style.top = (e.pageY - 50) + 'px';
+          document.body.appendChild(popElement);
+          setTimeout(() => popElement.remove(), 650);
+
+          // Wider, higher burst
+          spawnConfettiBurst(originX, originY, 180);
+
+          // Update message
+          const msg = document.querySelector('.message');
+          if (msg) msg.textContent = 'Confetti party! 🎊';
+        });
+
+        // On resize, physics already uses dynamic floor. No extra code needed.
+        // On scroll, physics loop checks the new floor and releases settled pieces to fall again.
+
         // Theme toggle
         document.querySelector('.theme-toggle').addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
