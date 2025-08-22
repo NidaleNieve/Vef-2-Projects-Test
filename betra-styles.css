@@ -7,6 +7,9 @@
   --text-color: #202124;
   --box-bg: #ffffff;
   --box-hover-bg: #f0f4ff;
+  --glow-color: rgba(66, 133, 244, 0.4);
+  --shine-color: rgba(255, 255, 255, 0.9);
+  --shine-angle: 120deg;
 }
 
 /* Base Styles */
@@ -31,7 +34,8 @@ h1, h2 {
   border-radius: 12px;
   background-color: var(--box-bg);
   box-shadow: 0 8px 15px var(--box-shadow);
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -44,6 +48,9 @@ h1 {
   font-weight: 700;
   color: var(--primary-color);
   border-left: 5px solid var(--primary-color);
+  background-image: linear-gradient(to right, var(--box-bg) 0%, var(--box-bg) 100%);
+  background-size: 100%;
+  background-position: 0 0;
 }
 
 /* H2 Specific Styles */
@@ -52,13 +59,19 @@ h2 {
   font-weight: 500;
   color: var(--secondary-color);
   border-left: 5px solid var(--secondary-color);
+  background-image: linear-gradient(to right, var(--box-bg) 0%, var(--box-bg) 100%);
+  background-size: 100%;
+  background-position: 0 0;
 }
 
 /* Hover Effects */
 h1:hover, h2:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 15px 30px var(--box-shadow);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 
+    0 15px 35px var(--box-shadow),
+    0 0 20px var(--glow-color);
   background-color: var(--box-hover-bg);
+  border-color: rgba(66, 133, 244, 0.2);
 }
 
 /* H1 Hover Animation */
@@ -67,13 +80,20 @@ h1:hover::after {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 200%;
   height: 100%;
-  background: linear-gradient(120deg, 
-    rgba(255, 255, 255, 0) 30%, 
-    rgba(255, 255, 255, 0.8) 50%, 
-    rgba(255, 255, 255, 0) 70%);
-  animation: shine 1.5s forwards;
+  background: linear-gradient(var(--shine-angle), 
+    rgba(255, 255, 255, 0) 20%, 
+    var(--shine-color) 40%, 
+    rgba(255, 255, 255, 0) 60%);
+  animation: shine 1.2s ease-in-out infinite;
+  z-index: 1;
+}
+
+h1:hover {
+  background-image: linear-gradient(to right, var(--box-hover-bg) 0%, #e8f0fe 50%, var(--box-hover-bg) 100%);
+  background-size: 200%;
+  animation: gradientShift 3s ease infinite;
 }
 
 /* H2 Hover Animation */
@@ -83,21 +103,50 @@ h2:hover::before {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 3px;
+  height: 4px;
   background-color: var(--secondary-color);
-  animation: expand 0.5s forwards;
+  animation: expand 0.7s forwards cubic-bezier(0.19, 1, 0.22, 1);
   transform-origin: left;
+}
+
+h2:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(var(--shine-angle), 
+    rgba(255, 255, 255, 0) 20%, 
+    var(--shine-color) 40%, 
+    rgba(255, 255, 255, 0) 60%);
+  animation: shine 1.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+h2:hover {
+  background-image: linear-gradient(to right, var(--box-hover-bg) 0%, #e6f4ea 50%, var(--box-hover-bg) 100%);
+  background-size: 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Add inner glow on hover */
+h1:hover, h2:hover {
+  box-shadow: 
+    0 15px 35px var(--box-shadow),
+    0 0 20px var(--glow-color),
+    inset 0 0 15px rgba(255, 255, 255, 0.8);
 }
 
 /* Animations */
 @keyframes shine {
   0% {
     left: -100%;
-    opacity: 0;
+    opacity: 0.7;
   }
   100% {
     left: 100%;
-    opacity: 1;
+    opacity: 0.7;
   }
 }
 
@@ -108,6 +157,42 @@ h2:hover::before {
   100% {
     transform: scaleX(1);
   }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Add a subtle pulsating effect */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+h1:hover, h2:hover {
+  animation: pulse 2s infinite;
+}
+
+/* Improved click effect */
+h1:active, h2:active {
+  transform: translateY(-2px) scale(0.98);
+  box-shadow: 0 5px 15px var(--box-shadow);
+  transition: all 0.1s;
 }
 
 /* Responsive Design */
