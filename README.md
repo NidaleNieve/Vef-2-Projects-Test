@@ -1,2 +1,2 @@
 # Vefforritun-2
-Vef app hópverkefni - Daníel, Pétur, Aron
+GitHub Projects Verkefni - Daníel, Pétur, Aron
