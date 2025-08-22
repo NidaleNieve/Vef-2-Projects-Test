@@ -70,6 +70,17 @@
             document.querySelector('.message').textContent = 'Rocket launched! 🚀';
         });
         
+        // Enhanced script for box3 to show heartbeat effect on hover
+        document.getElementById('box3').addEventListener('mouseover', function() {
+            const icon = this.querySelector('.icon');
+            icon.style.animation = 'rocketBounce 1.2s infinite';
+        });
+        
+        document.getElementById('box3').addEventListener('mouseout', function() {
+            const icon = this.querySelector('.icon');
+            icon.style.animation = '';
+        });
+        
         // Theme toggle
         document.querySelector('.theme-toggle').addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
