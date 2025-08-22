@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <div class="confetti-container"></div>
     <div class="container">
         <header class="header">
             <div class="logo">Fun Site</div>
@@ -80,6 +81,76 @@
             const icon = this.querySelector('.icon');
             icon.style.animation = '';
         });
+        
+        // Add confetti effect when clicking Hello World
+        document.querySelector('.animated-title').addEventListener('click', function(e) {
+            // Create pop animation at click position
+            const popElement = document.createElement('div');
+            popElement.classList.add('pop-animation');
+            popElement.style.left = (e.clientX - 50) + 'px';
+            popElement.style.top = (e.clientY - 50) + 'px';
+            document.body.appendChild(popElement);
+            
+            // Remove the pop element after animation
+            setTimeout(() => {
+                popElement.remove();
+            }, 600);
+            
+            // Create confetti
+            createConfetti();
+            
+            // Update message
+            document.querySelector('.message').textContent = 'Confetti party! 🎊';
+        });
+        
+        // Function to create confetti
+        function createConfetti() {
+            const container = document.querySelector('.confetti-container');
+            container.innerHTML = ''; // Clear any existing confetti
+            
+            const colors = ['#4285f4', '#34a853', '#fbbc05', '#db4437', '#0f9d58'];
+            
+            // Create 100 confetti pieces
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random properties
+                const size = Math.random() * 10 + 5;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const left = Math.random() * 100;
+                const delay = Math.random() * 2;
+                const duration = Math.random() * 2 + 2;
+                const rotationDirection = Math.random() > 0.5 ? 1 : -1;
+                
+                // Apply styles
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.backgroundColor = color;
+                confetti.style.left = `${left}%`;
+                confetti.style.animationDelay = `${delay}s`;
+                confetti.style.animationDuration = `${duration}s`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                // Apply random shapes
+                if (Math.random() > 0.6) {
+                    confetti.style.borderRadius = '50%'; // Circle
+                } else if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '0'; // Square
+                } else {
+                    confetti.style.width = `${size / 2}px`;
+                    confetti.style.height = `${size}px`;
+                    confetti.style.transform = `rotate(${45 + Math.random() * 45}deg)`;
+                }
+                
+                container.appendChild(confetti);
+                
+                // Remove confetti after animation completes
+                setTimeout(() => {
+                    confetti.remove();
+                }, (delay + duration) * 1000);
+            }
+        }
         
         // Theme toggle
         document.querySelector('.theme-toggle').addEventListener('click', function() {
