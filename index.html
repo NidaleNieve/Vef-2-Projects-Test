@@ -3,11 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Fun Interactive Site</title>
     <link rel="stylesheet" href="betra-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <h1> hello world</h1>
-    <h2>Þetta er ekki </h2>
+    <div class="container">
+        <header class="header">
+            <div class="logo">Fun Site</div>
+            <div class="theme-toggle">
+                <i class="fas fa-sun"></i>
+            </div>
+        </header>
+        
+        <div class="hero">
+            <h1 class="animated-title">Hello World <i class="fas fa-globe-americas"></i></h1>
+            <div class="subtitle">Welcome to the interactive playground</div>
+        </div>
+        
+        <div class="content">
+            <h2 class="animated-subtitle">Þetta er ekki <span class="highlight">venjulegt</span></h2>
+            
+            <div class="interactive-boxes">
+                <div class="fun-box" id="box1">
+                    <i class="fas fa-magic icon"></i>
+                    <span>Click me!</span>
+                </div>
+                <div class="fun-box" id="box2">
+                    <i class="fas fa-lightbulb icon"></i>
+                    <span>Hover over me!</span>
+                </div>
+                <div class="fun-box" id="box3">
+                    <i class="fas fa-rocket icon"></i>
+                    <span>Double click me!</span>
+                </div>
+            </div>
+            
+            <div class="message-board">
+                <div class="message">Try interacting with the elements!</div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <div class="footer-content">Made with <i class="fas fa-heart"></i> and CSS magic</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Simple interactions
+        document.getElementById('box1').addEventListener('click', function() {
+            this.classList.toggle('active');
+            document.querySelector('.message').textContent = 'Box clicked! 🎉';
+        });
+        
+        document.getElementById('box2').addEventListener('mouseover', function() {
+            this.classList.add('hover');
+            document.querySelector('.message').textContent = 'Nice hover! ✨';
+        });
+        
+        document.getElementById('box2').addEventListener('mouseout', function() {
+            this.classList.remove('hover');
+        });
+        
+        document.getElementById('box3').addEventListener('dblclick', function() {
+            this.classList.toggle('launched');
+            document.querySelector('.message').textContent = 'Rocket launched! 🚀';
+        });
+        
+        // Theme toggle
+        document.querySelector('.theme-toggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-sun')) {
+                icon.classList.replace('fa-sun', 'fa-moon');
+            } else {
+                icon.classList.replace('fa-moon', 'fa-sun');
+            }
+        });
+    </script>
 </body>
 </html>
